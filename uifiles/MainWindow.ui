@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>865</width>
+    <height>618</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTreeView" name="treeView">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>100</width>
+      <height>391</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>500</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <property name="dragDropMode">
+     <enum>QAbstractItemView::DragDrop</enum>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>865</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuLocal_BLAST">
+    <property name="title">
+     <string>BLAST</string>
+    </property>
+    <addaction name="action_makeblastdb"/>
+    <addaction name="actionBlast"/>
+    <addaction name="action_Blastdbcmd"/>
+    <addaction name="separator"/>
+    <addaction name="actionDiamond"/>
+   </widget>
+   <widget class="QMenu" name="menuTranslate_tool">
+    <property name="title">
+     <string>Translate tool</string>
+    </property>
+    <addaction name="actionTranslate_tool"/>
+   </widget>
+   <widget class="QMenu" name="menuNCBI_Entry">
+    <property name="title">
+     <string>NCBI Entry</string>
+    </property>
+    <addaction name="actionEntry"/>
+   </widget>
+   <addaction name="menuLocal_BLAST"/>
+   <addaction name="menuTranslate_tool"/>
+   <addaction name="menuNCBI_Entry"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_makeblastdb">
+   <property name="text">
+    <string>Makeblastdb</string>
+   </property>
+  </action>
+  <action name="actionBlast">
+   <property name="text">
+    <string>Blast</string>
+   </property>
+  </action>
+  <action name="action_Blastdbcmd">
+   <property name="text">
+    <string>Blastdbcmd</string>
+   </property>
+  </action>
+  <action name="actionTranslate_tool">
+   <property name="text">
+    <string>Translate_tool</string>
+   </property>
+  </action>
+  <action name="actionEntry">
+   <property name="text">
+    <string>NCBI Entry</string>
+   </property>
+  </action>
+  <action name="actionDiamond">
+   <property name="text">
+    <string>Diamond</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
