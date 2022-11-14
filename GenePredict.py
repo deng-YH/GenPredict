@@ -142,6 +142,8 @@ class GenePredict(QWidget, gene_predict.Ui_Form_GenePredict):
             for file in files:
                 if os.path.splitext(file)[1] == '.nsq':  # blast数据库文件后缀
                     F.append(os.path.splitext(file)[0])
+                elif os.path.splitext(file)[1] == '.psq':
+                    F.append(os.path.splitext(file)[0])
         self.comboBox_db_file.addItems(F)
         self.comboBox_cmd_db.addItems(F)
 
