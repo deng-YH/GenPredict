@@ -22,23 +22,26 @@ __product_name = PyCharm
 """
 import os
 import subprocess
-from PyQt5.QtCore import pyqtSignal, Qt
-from uifiles import ui_blast_out
-from PyQt5.QtWidgets import QMessageBox, QWidget, QSplitter, QHBoxLayout, QFileDialog
-from threading import Thread
+import sys
+from Bio import SearchIO
 
+from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
+from uifiles import ui_blast_out
+from PyQt5.QtWidgets import QMessageBox, QWidget, QSplitter, QHBoxLayout, QFileDialog, QApplication
+from threading import Thread
+from  blastdbcmd import Blastdbcmd
 
 class Blast_Out(QWidget, ui_blast_out.Ui_BLASTOUT):
     single_finish = pyqtSignal(str)  # 定义完成信号
 
-    def __init__(self, commandline, task_item=0, parent=None):
+    def __init__(self,  task_item=0, parent=None):
         super(Blast_Out, self).__init__(parent)
         # 加载界面
         self.setupUi(self)
         self.setWindowTitle('BlastOut task %s' % str(task_item))
         self.splitter1 = QSplitter(Qt.Horizontal)
         # 初始化参数
-        self.commandline = commandline
+        # self.commandline = commandline
         self.s_popen_pid = None
         self.blastdbcmd_widget = None
         self.save_directory = os.getcwd()
@@ -47,7 +50,7 @@ class Blast_Out(QWidget, ui_blast_out.Ui_BLASTOUT):
         self.single_finish.connect(self.single_finish_fun)
         self.pushButton_save.clicked.connect(self.pushButton_save_clicked)
 
-        self.star()
+        # self.star()
 
     # 重写closeEvent方法，实现窗体关闭时执行一些代码
     def closeEvent(self, event):
@@ -99,21 +102,21 @@ class Blast_Out(QWidget, ui_blast_out.Ui_BLASTOUT):
         t.start()
 
     # 槽函数
-    # def pushButton_blastdbcmd_clicked(self):
-    #     """
-    #     创建Blastdbcmd对象，加入滑动条，并显示
-    #     隐藏按钮pushButton_blastdbcmd
-    #     """
-    #     self.blastdbcmd_widget = C_blastdbcmd.Blastdbcmd()
-    #     # 控制左右滑动
-    #
-    #     self.splitter1.addWidget(self.plainTextEdit)
-    #     self.splitter1.addWidget(self.blastdbcmd_widget)
-    #     # print('111')
-    #     windowLayout = QHBoxLayout()
-    #     windowLayout.addWidget(self.splitter1)
-    #     self.verticalLayout.addLayout(windowLayout)
-    #     self.pushButton_blastdbcmd.hide()
+    def pushButton_blastdbcmd_clicked(self):
+        """
+        创建Blastdbcmd对象，加入滑动条，并显示
+        隐藏按钮pushButton_blastdbcmd
+        """
+        self.blastdbcmd_widget = Blastdbcmd()
+        # 控制左右滑动
+
+        self.splitter1.addWidget(self.plainTextEdit)
+        self.splitter1.addWidget(self.blastdbcmd_widget)
+        # print('111')
+        windowLayout = QHBoxLayout()
+        windowLayout.addWidget(self.splitter1)
+        self.verticalLayout.addLayout(windowLayout)
+        self.pushButton_blastdbcmd.hide()
 
     def single_finish_fun(self, out):
         """
@@ -131,3 +134,20 @@ class Blast_Out(QWidget, ui_blast_out.Ui_BLASTOUT):
             self.save_directory = os.path.split(save_path)[0]
             with open(save_path, 'w') as f:
                 f.write(plain_text)
+if __name__ == '__main__':
+    QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    app = QApplication(sys.argv)
+    MainWindow = Blast_Out()
+    MainWindow.show()
+    sys.exit(app.exec_())
+
+
+
+
+
+
+
+
+
+
+

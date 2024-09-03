@@ -49,12 +49,12 @@ class LocalBlast(QWidget, ui_local_blast.Ui_Form_BLAST):
 
         # 初始化参数
         self.load_path = os.getcwd()
-        self.db_path = f'{self.script_path}\\DB\\blastdb'
-        self.blast_path = f'{self.script_path}\\tools\\blast+\\bin\\'
-        self.query_file = f'{self.script_path}\\tempfile\\blast_query.fasta'
-        self.subject_file = f'{self.script_path}\\tempfile\\blast_subject.fasta'
-        self.out_file = f'{self.script_path}\\tempfile\\blast_out.fasta'
-
+        self.db_path = os.path.join(self.script_path, 'DB', 'blastdb')
+        self.blast_path = os.path.join(self.script_path, 'tools', 'blast+', 'bin')
+        self.query_file = os.path.join(self.script_path, 'tempfile', 'blast_query.fasta')
+        self.subject_file = os.path.join(self.script_path, 'tempfile', 'blast_subject.fasta')
+        self.out_file = os.path.join(self.script_path, 'tempfile', 'blast_out.fasta')
+        print(self.blast_path)
         # 加载diamond_db_files
         self.comboBox_db_files_addItems()
 
@@ -72,9 +72,10 @@ class LocalBlast(QWidget, ui_local_blast.Ui_Form_BLAST):
         self.comboBox_app.currentIndexChanged.connect(self.comboBox_app_currentIndexChanged)
         self.PushButton_make_db.clicked.connect(self.btn_make_blast_db_clicked)
         self.pushButton_BLAST.clicked.connect(self.btn_blast_clicked)
-
+        # self.comboBox_db_files.activated.connect(self.comboBox_db_files_addItems)
         self.single_finish.connect(self.accept_single_finish)
         self.single_error.connect(self.accept_single_error)
+        self.MakeBlastDB.single_finish.connect(self.comboBox_db_files_addItems)
 
     def create_validator(self):
         validator = QIntValidator(0, 18, self)
@@ -87,12 +88,50 @@ class LocalBlast(QWidget, ui_local_blast.Ui_Form_BLAST):
         """
         self.comboBox_db_files.clear()
         F = []  # 储存所有文件夹
+        db_list = []
         for _, dirs, files in os.walk(self.db_path):
             for file in files:
-                if os.path.splitext(file)[1] == '.nsq':
-                    F.append(os.path.splitext(file)[0])
-                elif os.path.splitext(file)[1] == '.psq':
-                    F.append(os.path.splitext(file)[0])
+                if self.comboBox_app.currentIndex() == 1 or self.comboBox_app.currentIndex() == 2:
+                    if os.path.splitext(file)[1] == '.psq':
+                        F.append(os.path.splitext(file)[0])
+                    # 去除.nal中的DBLIST项
+                    elif os.path.splitext(file)[1] == '.pal':
+                        F.append(os.path.splitext(file)[0])
+                        path = os.path.join(_, file)
+                        with open(path, "r") as f:
+                            i = 0
+                            while 1:
+                                line = f.readline()
+                                if "DBLIST" in line or i > 10:
+                                    break
+                                i += 1
+                        line = line.replace('DBLIST ', '').strip()
+                        DBLIST = line.split(' ')
+                        DBLIST = list(filter(None, DBLIST))
+                        db_list = db_list + DBLIST
+                else:
+                    if os.path.splitext(file)[1] == '.nsq':
+                        F.append(os.path.splitext(file)[0])
+                    # 去除.nal中的DBLIST项
+                    elif os.path.splitext(file)[1] == '.nal':
+                        F.append(os.path.splitext(file)[0])
+                        path = os.path.join(_, file)
+                        with open(path, "r") as f:
+                            i = 0
+                            while 1:
+                                line = f.readline()
+                                if "DBLIST" in line or i > 10:
+                                    break
+                                i += 1
+                        line = line.replace('DBLIST ', '').strip()
+                        DBLIST = line.split(' ')
+                        DBLIST = list(filter(None, DBLIST))
+                        db_list = db_list + DBLIST
+        # 去除.nal中的DBLIST项
+        for db_name in db_list:
+            if db_name in F:
+                F.remove(db_name)
+        # 添加db到组合框中
         self.comboBox_db_files.addItems(F)
 
     def get_file_name(self, option):
@@ -149,6 +188,7 @@ class LocalBlast(QWidget, ui_local_blast.Ui_Form_BLAST):
         组合框conBox_app选中项改变事件
         将task加入到组合框comboBox_task中，并与conBox_app相对应
         """
+        self.comboBox_db_files_addItems()
         self.comboBox_task.clear()
         # blasn
         if self.comboBox_app.currentIndex() == 0:
@@ -180,11 +220,12 @@ class LocalBlast(QWidget, ui_local_blast.Ui_Form_BLAST):
                              universal_newlines=True,
                              encoding='gbk',
                              )
+        print(command)
         self.s_popen_pid = p.pid
         p.wait()  # 等待运行
         return_code = str(p.returncode)  # 获取cmd执行结果代码
         out = p.stdout.read()  # 返回cmd执行结果
-        # print(return_code)
+        print(return_code)
         if 'Error' not in out:  # 成功
             self.single_finish.emit(out_file)
         elif 'Error' in out:  # 错误
@@ -219,11 +260,11 @@ class LocalBlast(QWidget, ui_local_blast.Ui_Form_BLAST):
         else:
             command = f'{app_name} -query "{query}" -db "{db_file}" -outfmt {outfmt} -evalue {e_value} -out "{self.out_file}" -task {task} {more_option}'
             if self.comboBox_app.currentText() == 'tblastx':
-                command = command = f'{app_name} -query "{query}" -db "{db_file}" -outfmt {outfmt} -evalue {e_value} -out "{self.out_file}" {more_option}'
+                command = f'{app_name} -query "{query}" -db "{db_file}" -outfmt {outfmt} -evalue {e_value} -out "{self.out_file}" {more_option}'
         return command
 
     def blast_start(self, command):
-        print(command)
+        # print(command)
         t = Thread(target=self._s_popen, args=(command, self.out_file))
         t.setDaemon(True)
         t.start()

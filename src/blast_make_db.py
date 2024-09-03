@@ -41,8 +41,8 @@ class MakeBlastDB(QWidget, ui_blast_make_db.Ui_Form_make_db):
         self.setupUi(self)
         # 初始化参数
         self.title = 'Make blast db'
-        self.makeblastdb = f'{self.script_path}\\tools\\blast+\\bin\makeblastdb'
-        self.db_path = f'{self.script_path}\\DB\\blastdb\\'
+        self.makeblastdb = os.path.join(self.script_path, 'tools', 'blast+', 'bin', 'makeblastdb')
+        self.db_path = os.path.join(self.script_path, 'DB', 'blastdb')
         # print(self.db_path)
         self.load_path = os.getcwd()
         self.s_popen_pid = None
@@ -106,24 +106,28 @@ class MakeBlastDB(QWidget, ui_blast_make_db.Ui_Form_make_db):
         :param command: cmd 命令
         :return: 执行结果
         """
-        p = subprocess.Popen(command,
-                             shell=True,
-                             stdout=subprocess.PIPE,
-                             stdin=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             universal_newlines=True,
-                             encoding='gbk',
-                             )
-        self.s_popen_pid = p.pid
-        while p.poll() is None:
-            out = p.stdout.readline()
-            # print(out)
-            if out != "":
-                self.single_finish.emit(out)
+
+        # 使用Popen创建进程，并与进程进行复杂的交互
+        proc = subprocess.Popen(
+            command,  # cmd特定的查询空间的命令
+            stdin=None,  # 标准输入 键盘
+            stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
+            stderr=subprocess.PIPE,  # 标准错误，保存到管道
+            shell=True)
+        self.single_finish.emit("Please wait a moment, the program is running.")
+        outinfo, errinfo = proc.communicate()  # 获取输出和错误信息
+        print(outinfo.decode('gbk'))  # 外部程序 (windows系统)决定编码格式
+        print(errinfo.decode('gbk'))
+
+        if not errinfo.decode('gbk'):
+            self.single_finish.emit(outinfo.decode('gbk'))
+        else:
+            self.single_finish.emit(errinfo.decode('gbk'))
 
     def get_makeblastdb_command(self, in_file, dbtype, db_name):
-        out = self.db_path + db_name
-        command = f'{self.makeblastdb} -in "{in_file}" -dbtype {dbtype} -out "{out}" -parse_seqids'
+        out = os.path.join(self.db_path,db_name)
+        command = f'"{self.makeblastdb}" -in "{in_file}" -dbtype {dbtype} -out "{out}" -parse_seqids'
+        print(command)
         return command
 
     def makeblastdb_start(self, in_file, dbtype, db_name):

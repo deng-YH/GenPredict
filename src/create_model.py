@@ -112,10 +112,10 @@ class CreateModel(QWidget, ui_CNN.Ui_Form_CNN):
             QMessageBox.information(self, 'information', 'Please fill in the model name.')
             return False
         path = os.path.join(model_path, dir_name)
-        print(path)
+        # print(path)
         if not os.path.exists(path):
             os.makedirs(path)
-            print('The model directory was created successfully!')
+            # print('The model directory was created successfully!')
         self.model_path = path
         return True
 
@@ -141,7 +141,7 @@ class CreateModel(QWidget, ui_CNN.Ui_Form_CNN):
                 genome_file,
                 train_num)
             self.script_path = self.script_path.replace(r'\src', '')
-            print(os.path.join(self.script_path, r'data\train\AG.json'))
+            # print(os.path.join(self.script_path, r'data\train\AG.json'))
             with open(os.path.join(self.script_path, r'data\train\AG.json'), 'w') as f:
                 json.dump(AG_train_data, f)
             with open(os.path.join(self.script_path, r'data\test\AG.json'), 'w') as f:
@@ -178,7 +178,7 @@ class CreateModel(QWidget, ui_CNN.Ui_Form_CNN):
     def stop_btn_clicked(self):
         # _async_raise(self.t.ident, SystemExit)
         stop_thread(self.t)  # Signal termination
-        print('sssss')
+        # print('sssss')
         self.pushButton_start.setText('Start')
         # self.pushButton_start.clicked.connect(self.start())
         # self.pushButton_start.clicked.disconnect(self.stop_btn_clicked)

@@ -21,6 +21,7 @@ __product_name = PyCharm
                   ┗┻┛  ┗┻┛
 """
 import os
+import os
 import subprocess
 import sys
 from threading import Thread
@@ -47,16 +48,17 @@ class Blastdbcmd(QWidget, ui_blastdbcmd.Ui_Frame_Blastdbcmd):
 
         # 限制输入
         self.create_validator()
-        self.db_path = self.script_path + r'\DB\blastdb'
-        self.blastdbcmd = self.script_path + r'\tools\blast+\bin\blastdbcmd'
+        self.db_path = os.path.join(self.script_path, 'DB', 'blastdb')
+        self.blastdbcmd = os.path.join(self.script_path, 'tools', 'blast+', 'bin', 'blastdbcmd')
         # 加载本地数据库列表
         self.comboBox_cmd_db_addItems()
+
 
         # 信号和槽
         self.single_finish.connect(self.accept_single_finish)
         self.single_error.connect(self.accept_single_error)
         self.pushButton_create_file.clicked.connect(self.btn_create_clicked)
-
+        self.comboBox_cmd_db.highlighted.connect(self.comboBox_cmd_db_addItems)
     def create_validator(self):
         validator = QIntValidator(self)
         self.lineEdit_begin.setValidator(validator)
@@ -69,12 +71,33 @@ class Blastdbcmd(QWidget, ui_blastdbcmd.Ui_Frame_Blastdbcmd):
         """
         self.comboBox_cmd_db.clear()
         F = []  # 储存所有文件夹
+        db_list = []
         for _, dirs, files in os.walk(self.db_path):
             for file in files:
                 if os.path.splitext(file)[1] == '.nsq':
                     F.append(os.path.splitext(file)[0])
                 elif os.path.splitext(file)[1] == '.psq':
                     F.append(os.path.splitext(file)[0])
+                elif os.path.splitext(file)[1] == '.nal':
+                    F.append(os.path.splitext(file)[0])
+                    path = os.path.join(_, file)
+                    with open(path, "r") as f:
+                        i = 0
+                        while 1:
+                            line = f.readline()
+                            if "DBLIST" in line or i > 10:
+                                break
+                            i += 1
+                    line = line.replace('DBLIST ', '').strip()
+                    DBLIST = line.split(' ')
+                    print(DBLIST)
+                    DBLIST = list(filter(None, DBLIST))
+                    db_list = db_list + DBLIST
+        # 去除.nal中的DBLIST项
+        for db_name in db_list:
+            if db_name in F:
+                F.remove(db_name)
+        # 添加db到组合框中
         self.comboBox_cmd_db.addItems(F)
 
     def get_file_name(self):
@@ -96,6 +119,7 @@ class Blastdbcmd(QWidget, ui_blastdbcmd.Ui_Frame_Blastdbcmd):
         :param command: cmd 命令
         :return: 执行结果
         """
+        print(command)
         p = subprocess.Popen(command,
                              shell=True,
                              stdout=subprocess.PIPE,
@@ -155,7 +179,7 @@ class Blastdbcmd(QWidget, ui_blastdbcmd.Ui_Frame_Blastdbcmd):
         """
         app_cmd = self.blastdbcmd
         # db = os.path.join(self.db_path, self.comboBox_db_file.currentText())  # 数据库文件目录
-        command = f'"{app_cmd}" -entry {entry} -db "{db}" -out {out_file} -range {seq_range}'
+        command = f'{app_cmd} -entry {entry} -db "{db}" -out {out_file} -range {seq_range}'
         return command
 
     def blastdbcmd_start(self, command, blastdbcmd_out_file):

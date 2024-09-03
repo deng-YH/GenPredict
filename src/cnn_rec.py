@@ -34,7 +34,8 @@ from io import StringIO
 
 
 class CNN_REC(QWidget, cnn_rec.Ui_Form_CNN_REC):
-    script_path = os.path.split(os.path.realpath(__file__))[0]
+    script_path = os.getcwd().replace('src', '')
+    print(script_path)
     single_calculated_result = pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -42,7 +43,7 @@ class CNN_REC(QWidget, cnn_rec.Ui_Form_CNN_REC):
         # 加载界面
         self.setupUi(self)
 
-        self.model_path = os.path.abspath(os.path.join(self.script_path, '../model'))
+        self.model_path = os.path.join(self.script_path, 'model')
         self.seqs = []
         self.CNN_MODEL_AG = cnn.CNN_model()
         # self.CNN_MODEL_GT = cnn.CNN_model()
@@ -54,7 +55,7 @@ class CNN_REC(QWidget, cnn_rec.Ui_Form_CNN_REC):
         self.single_calculated_result.connect(self.accept_single_calculated_result)
 
     def text_edit_load_seqs(self):
-        self.seqs.clear()
+        # self.seqs.clear()
         textEdit_txt = self.textEdit.toPlainText()
         # print(textEdit_txt)
         handle = SeqIO.parse(StringIO(textEdit_txt), 'fasta')
