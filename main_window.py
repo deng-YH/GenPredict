@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QSplitter, QHBoxLayout, Q
 
 import GenePredict
 from uifiles import MainWindow
-from src import diamond, local_blast, blast_make_db, blastdbcmd, translate, nbci_entry
+from src import diamond, local_blast, blast_make_db, blastdbcmd, translate, nbci_entry, create_model
 
 
 class MainWindowSRC(QMainWindow, MainWindow.Ui_MainWindow):
@@ -42,11 +42,11 @@ class MainWindowSRC(QMainWindow, MainWindow.Ui_MainWindow):
         self.GenePredict = GenePredict.GenePredict()  # 实例GenePredict对象
         self.groupBox_layout = QHBoxLayout()  # groupBox中的layout
 
-        self.model = QFileSystemModel()  # 这里得到目录结构
-        self.tree_view_get_file()  # treeView 获取当前目录下所有文件
+        # self.model = QFileSystemModel()  # 这里得到目录结构
+        # self.tree_view_get_file()  # treeView 获取当前目录下所有文件
 
         self.splitter1 = QSplitter(Qt.Horizontal)  # QSplitter允许用户通过拖动子窗口之间的边界来控制子窗口小部件的大小
-        self.splitter1.addWidget(self.treeView)  # splitter1添加treeView控件
+        # self.splitter1.addWidget(self.treeView)  # splitter1添加treeView控件
         self.splitter1.addWidget(self.GenePredict)  # 将GenePredict添加到splitter1中
 
         self.windowLayout = QHBoxLayout()  # 水平布局
@@ -54,27 +54,38 @@ class MainWindowSRC(QMainWindow, MainWindow.Ui_MainWindow):
         self.centralwidget.setLayout(self.windowLayout)  # 设置主窗体为水平布局
 
         # 实例对象
-        self.frame_diamond = diamond.Diamond()
-        self.frame_local_blast = local_blast.LocalBlast()
-        self.frame_make_blast_db = blast_make_db.MakeBlastDB()
-        self.frame_blastdbcmd = blastdbcmd.Blastdbcmd()
-        self.frame_translate = translate.C_translate()
-        self.frame_ncbi_entry = nbci_entry.NCBIEntry()
+        self.frame = []
+        # self.frame_diamond = diamond.Diamond()
+        # self.frame_local_blast = local_blast.LocalBlast()
+        # self.frame_make_blast_db = blast_make_db.MakeBlastDB()
+        # self.frame_blastdbcmd = blastdbcmd.Blastdbcmd()
+        # self.frame_translate = translate.C_translate()
+        # self.frame_ncbi_entry = nbci_entry.NCBIEntry()
 
         # 信号和槽
-        self.treeView.doubleClicked.connect(self.treeView_doubleClicked)  # treeView连接槽函数 鼠标单击事件
-        self.actionDiamond.triggered.connect(lambda: self.show_frame(self.frame_diamond))
-        self.actionBlast.triggered.connect(lambda: self.show_frame(self.frame_local_blast))
-        self.action_makeblastdb.triggered.connect(lambda: self.show_frame(self.frame_make_blast_db))
-        self.action_Blastdbcmd.triggered.connect(lambda: self.show_frame(self.frame_blastdbcmd))
-        self.actionTranslate_tool.triggered.connect(lambda: self.show_frame(self.frame_translate))
-        self.actionEntry.triggered.connect(lambda: self.show_frame(self.frame_ncbi_entry))
+        # self.treeView.doubleClicked.connect(self.treeView_doubleClicked)  # treeView连接槽函数 鼠标单击事件
+        # self.actionDiamond.triggered.connect(lambda: self.show_frame(self.frame_diamond))
+        # self.actionBlast.triggered.connect(lambda: self.show_frame(self.frame_local_blast))
+        # self.action_makeblastdb.triggered.connect(lambda: self.show_frame(self.frame_make_blast_db))
+        # self.action_Blastdbcmd.triggered.connect(lambda: self.show_frame(self.frame_blastdbcmd))
+        # self.actionTranslate_tool.triggered.connect(lambda: self.show_frame(self.frame_translate))
+        # self.actionEntry.triggered.connect(lambda: self.show_frame(self.frame_ncbi_entry))
+        # self.actionCNN_train.triggered.connect(lambda: self.show_frame(self.frame_ncbi_entry))
+        # self.frame_make_blast_db.single_finish.connect(self.GenePredict.get_all_db_file)
+        # self.treeView.doubleClicked.connect(self.treeView_doubleClicked)  # treeView连接槽函数 鼠标单击事件
+        self.actionDiamond.triggered.connect(lambda: self.create_frame(0))
+        self.actionBlast.triggered.connect(lambda: self.create_frame(1))
+        self.action_makeblastdb.triggered.connect(lambda: self.create_frame(2))
+        self.action_Blastdbcmd.triggered.connect(lambda: self.create_frame(3))
+        self.actionTranslate_tool.triggered.connect(lambda: self.create_frame(4))
+        self.actionEntry.triggered.connect(lambda: self.create_frame(5))
+        self.actionCNN_train.triggered.connect(lambda: self.create_frame(6))
+        # self.frame_make_blast_db.single_finish.connect(self.GenePredict.get_all_db_file)
 
     def tree_view_get_file(self):
         self.model.setRootPath(self.root)  # 设置文件结构根目录
         self.treeView.setModel(self.model)  # treeView设置目录模型
         self.treeView.setRootIndex(self.model.index(self.root))  # 从设置目录root加载目录信息
-
         self.treeView.setColumnHidden(1, True)  # tree_view隐藏SIZE
         self.treeView.setColumnHidden(2, True)  # tree_view隐藏file type
         self.treeView.setColumnHidden(3, True)  # # tree_view隐藏time
@@ -89,18 +100,52 @@ class MainWindowSRC(QMainWindow, MainWindow.Ui_MainWindow):
         filePath = self.model.filePath(Qmodelidx)  # 返回目录信息
         os.system(f'start {filePath}')  # 执行目录
 
+    def create_frame(self, num):
+        if num == 0:
+            frame = diamond.Diamond()
+            self.frame.append(frame)
+            frame.show()
+        elif num == 1:
+            frame = local_blast.LocalBlast()
+            self.frame.append(frame)
+            frame.show()
+        elif num == 2:
+            frame = blast_make_db.MakeBlastDB()
+            self.frame.append(frame)
+            frame.show()
+        elif num == 3:
+            frame = blastdbcmd.Blastdbcmd()
+            self.frame.append(frame)
+            frame.show()
+        elif num == 4:
+            frame = translate.C_translate()
+            self.frame.append(frame)
+            frame.show()
+        elif num == 5:
+            frame = nbci_entry.NCBIEntry()
+            self.frame.append(frame)
+            frame.show()
+        elif num == 6:
+            frame = create_model.CreateModel()
+            self.frame.append(frame)
+            frame.show()
+
     def show_frame(self, frame):
+
         frame.show()
 
     def closeEvent(self, event):
         """
         删除tempfile目录下的所有文件或文件夹
         """
-        del_list = os.listdir('./tempfile')
-        for f in del_list:
-            file_path = os.path.join(r'./tempfile', f)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
+        try:
+            del_list = os.listdir('./tempfile')
+            for f in del_list:
+                file_path = os.path.join(r'./tempfile', f)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+        except Exception as e:
+            print(e)
 
 
 if __name__ == '__main__':
