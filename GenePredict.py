@@ -100,7 +100,7 @@ class GenePredict(QWidget, gene_predict.Ui_Form_GenePredict):
         # 初始化
         self.s_popen_pid = None
         self.db_path = os.path.abspath(r'./DB/blastdb')  # 本地blast数据库目录
-        self.get_all_db_file()  # 获取本地数据库 添加到组合框comboBox_db_file中
+        self.comboBox_db_files_addItems()  # 获取本地数据库 添加到组合框comboBox_db_file中
         self.blast_tool_bin_path = os.path.abspath(r'./tools/blast+/bin')
         self.tempfile_path = os.path.abspath(r'./tempfile')
         self.query_seq_path = os.path.abspath(r'./tempfile/query.fasta')
@@ -118,6 +118,8 @@ class GenePredict(QWidget, gene_predict.Ui_Form_GenePredict):
         self.single_cmd_out.connect(self.table_view_get_single)
         self.pushButton_GENSCAN.clicked.connect(self.pushButton_GENSCAN_clicked)
         self.comboBox_db_file.currentIndexChanged.connect(self.combobox_db_currentIndexChanged)
+
+        # self.comboBox_db_file.highlighted.connect(self.comboBox_db_files_addItems)
         self.pushButton_create_file.clicked.connect(self.btn_blastdbcmd_create_file_clicked)
         self.single_blastdbcmd_out2.connect(self.blastdbcmd_get_single)
         self.pushButton_GENSCAN_2.clicked.connect(self.pushButton_GENSCAN_2_clicked)
@@ -132,18 +134,57 @@ class GenePredict(QWidget, gene_predict.Ui_Form_GenePredict):
         self.lineEdit_end.setValidator(validator)
         self.lineEdit_out_size.setValidator(validator)
 
-    def get_all_db_file(self):
+    def comboBox_db_files_addItems(self):
         """
         获取数据库文件目录路径list
         :return: 所有目录下的全部数据库文件路径list
         """
+        self.comboBox_db_file.clear()
         F = []  # 储存所有文件夹
+        db_list = []
         for _, dirs, files in os.walk(self.db_path):
             for file in files:
-                if os.path.splitext(file)[1] == '.nsq':  # blast数据库文件后缀
-                    F.append(os.path.splitext(file)[0])
-                elif os.path.splitext(file)[1] == '.psq':
-                    F.append(os.path.splitext(file)[0])
+                if self.comboBox_app.currentIndex() == 1 or self.comboBox_app.currentIndex() == 2:
+                    if os.path.splitext(file)[1] == '.psq':
+                        F.append(os.path.splitext(file)[0])
+                    # 去除.nal中的DBLIST项
+                    elif os.path.splitext(file)[1] == '.pal':
+                        F.append(os.path.splitext(file)[0])
+                        path = os.path.join(_, file)
+                        with open(path, "r") as f:
+                            i = 0
+                            while 1:
+                                line = f.readline()
+                                if "DBLIST" in line or i > 10:
+                                    break
+                                i += 1
+                        line = line.replace('DBLIST ', '').strip()
+                        DBLIST = line.split(' ')
+                        DBLIST = list(filter(None, DBLIST))
+                        db_list = db_list + DBLIST
+                else:
+                    if os.path.splitext(file)[1] == '.nsq':
+                        F.append(os.path.splitext(file)[0])
+                    # 去除.nal中的DBLIST项
+                    elif os.path.splitext(file)[1] == '.nal':
+                        F.append(os.path.splitext(file)[0])
+                        path = os.path.join(_, file)
+                        with open(path, "r") as f:
+                            i = 0
+                            while 1:
+                                line = f.readline()
+                                if "DBLIST" in line or i > 10:
+                                    break
+                                i += 1
+                        line = line.replace('DBLIST ', '').strip()
+                        DBLIST = line.split(' ')
+                        DBLIST = list(filter(None, DBLIST))
+                        db_list = db_list + DBLIST
+        # 去除.nal中的DBLIST项
+        for db_name in db_list:
+            if db_name in F:
+                F.remove(db_name)
+        # 添加db到组合框中
         self.comboBox_db_file.addItems(F)
         self.comboBox_cmd_db.addItems(F)
 
@@ -245,6 +286,7 @@ class GenePredict(QWidget, gene_predict.Ui_Form_GenePredict):
         组合框conBox_app选中项改变事件
         将task加入到组合框comboBox_task中，并与conBox_app相对应
         """
+        self.comboBox_db_files_addItems()
         self.comboBox_task.clear()
         # blasn
         if self.comboBox_app.currentIndex() == 0:
@@ -358,7 +400,7 @@ class GenePredict(QWidget, gene_predict.Ui_Form_GenePredict):
         """
         app_cmd = os.path.join(self.blast_tool_bin_path, 'blastdbcmd')  # blast程序
         # db = os.path.join(self.db_path, self.comboBox_db_file.currentText())  # 数据库文件目录
-        command = f'"{app_cmd}" -entry {entry} -db "{db}" -out {out_file} -range {seq_range}'
+        command = f'{app_cmd} -entry {entry} -db "{db}" -out {out_file} -range {seq_range}'
         return command
 
     def get_blastdbcmd_commands(self, lines: list):
